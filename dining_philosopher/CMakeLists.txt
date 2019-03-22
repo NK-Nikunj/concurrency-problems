@@ -4,5 +4,5 @@ project(my_hpx_project CXX)
 
 find_package(HPX REQUIRED)
 add_hpx_executable(dining_philosopher
-    SOURCES dining_philosopher.cpp
+    SOURCES dp.cpp
     COMPONENT_DEPENDENCIES iostreams)

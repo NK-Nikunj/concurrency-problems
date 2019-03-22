@@ -1,7 +1,0 @@
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/install/strip.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/edit_cache.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/dining_philosopher.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/list_install_components.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/install/local.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/rebuild_cache.dir
-/home/nk/Projects/concurrency-problems/dining_philosopher/build/CMakeFiles/install.dir

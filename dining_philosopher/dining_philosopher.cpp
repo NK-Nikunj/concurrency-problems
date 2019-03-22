@@ -60,9 +60,7 @@ public:
             chopsticks.push_back(true);
         }
 
-        std::unique_ptr<hpx::lcos::local::mutex[]> cp(new hpx::lcos::local::mutex[n]);
-
-        mu = std::move(cp);
+        mu.emplace_back(std::make_unique<hpx::lcos::local::mutex>());
     }
 
 private:
@@ -75,7 +73,8 @@ private:
 
     bool check_left(int i)
     {
-        std::lock_guard<hpx::lcos::local::mutex> mu_left(mu[i]);
+        std::lock_guard<hpx::lcos::local::mutex> mu_left(*mu[i]);
+        std::cout << i + '\n';
         bool val = chopsticks[i];
         if(val == true)
             chopsticks[i] == false;
@@ -85,8 +84,9 @@ private:
 
     bool check_right(int i)
     {
-        std::lock_guard<hpx::lcos::local::mutex> mu_right(mu[i]);
+        std::lock_guard<hpx::lcos::local::mutex> mu_right(*mu[i]);
         // auto mu_right(mu[i]);
+        std::cout << i + '\n';
         bool val = chopsticks[i];
         if(val == true)
             chopsticks[i] == false;
@@ -111,8 +111,9 @@ private:
 
             if(wishes_to_eat)
             {
-                char const* fmt1 = "Philosopher {1} wishes to eat, it will now try";
-                hpx::util::format_to(std::cout, fmt1, index);
+                // char const* fmt1 = "Philosopher {1} wishes to eat, it will now try";
+                // hpx::util::format_to(std::cout, fmt1, index);
+                
 
                 bool is_left_clear, is_right_clear;
                 do {
@@ -121,10 +122,11 @@ private:
 
                     if(is_left_clear && is_right_clear)
                         eat();
-                }while(is_left_clear == false || is_right_clear == false);
 
-                char const* fmt2 = "Philosopher {1} has eaten well, it will now think";
-                hpx::util::format_to(std::cout, fmt2, index);
+                } while(is_left_clear == false || is_right_clear == false);
+
+                // char const* fmt2 = "Philosopher {1} has eaten well, it will now think";
+                // hpx::util::format_to(std::cout, fmt2, index);
 
 
                 chopsticks[left] = true;
@@ -137,19 +139,28 @@ public:
     void start_simulation()
     {
         for(auto i = 0; i < num_phil; ++i)
-            {
-                hpx::thread t([i, this] {simulate(i);});
-                threads.push_back(std::move(t));
-            } 
+        {
+            // hpx::thread t([i, this] {simulate(i);});
+            // threads.push_back(std::move(t));
+            // threads[i];
+            threads.emplace_back(std::make_unique<hpx::thread>(&Dining_philosopher::simulate, this, i));
+        }
+        
+        for(auto i = 0; i < num_phil; ++i)
+        {
+            // hpx::thread t([i, this] {simulate(i);});
+            // threads.push_back(std::move(t));
+            // threads[i];
+            threads[i] -> join();
+        }
+
     }
 
 private:
     int num_phil;
-    // std::vector<int> philosophers;
     std::vector<bool> chopsticks;
-    std::vector<hpx::thread> threads;
-    std::unique_ptr<hpx::lcos::local::mutex[]> mu;
-    // hpx::lcos::local::mutex mu*;
+    std::vector<std::unique_ptr<hpx::thread>> threads;
+    std::vector<std::unique_ptr<hpx::lcos::local::mutex>> mu;
 };
 
 
