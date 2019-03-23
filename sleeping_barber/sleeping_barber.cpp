@@ -18,61 +18,76 @@ public:
     void cut_hair();    
     void enter_shop(int);
     void simulate(int, int);
-    void customer_leave();
 
     Barber(int ct, int ql) : cut_time(ct), queue_length(ql) {}
 
 private:
     std::queue<int> customer_id;
-    bool is_sleeping = false;
+    volatile bool is_sleeping = true;
     int cut_time;
     int queue_length;
 
-    hpx::lcos::local::mutex check, cut, push;
+    hpx::lcos::local::mutex check, cut, print;
 };
 
 void Barber::cut_hair()
 {
-    std::cout << "Cutting hair" << std::endl;
     hpx::this_thread::sleep_for(std::chrono::milliseconds(cut_time));
-}
-
-void Barber::customer_leave()
-{
-    std::cout << "No waiting remaining. Leaving" << std::endl;
 }
 
 void Barber::enter_shop(int id)
 {
     {
+        std::lock_guard<hpx::lcos::local::mutex> lock(print);
+        std::cout << "Customer id: " << id << " enters the salon\n";
+    }
+    
+    {
         std::lock_guard<hpx::lcos::local::mutex> lock(check);
         if(is_sleeping && customer_id.size() == 0)
         {
-            is_sleeping == false;
+            is_sleeping = false;
+            std::cout << "Customer id: " << id << " is getting a hair cut\n";
             std::lock_guard<hpx::lcos::local::mutex> lock(cut);
             cut_hair();
+            return;
         }
     }
 
     {
         {
-            std::lock_guard<hpx::lcos::local::mutex> lock(push);
+            std::lock_guard<hpx::lcos::local::mutex> lock(check);
             if(customer_id.size() < queue_length)
+            {
+                std::cout << "Customer id: " << id 
+                    << " is waiting in the queue. Current waiting number"
+                    << customer_id.size() + 1 << std::endl;
                 customer_id.push(id);
+            }
             else
-                customer_leave();
+            {
+                std::cout << "Customer id: " << id 
+                    << " is leaving due to unavailability of waiting seats\n";
+                return;
+            }
         }
 
         while(customer_id.front() != id) {}
 
-        std::lock_guard<hpx::lcos::local::mutex> lock(cut);
-        cut_hair();
-        customer_id.pop();
+        {
+            std::lock_guard<hpx::lcos::local::mutex> lock(cut);
+            std::cout << "Customer id: " << id << " is getting a hair cut\n";
+            cut_hair();
+            customer_id.pop();
+        }
 
         {
             std::lock_guard<hpx::lcos::local::mutex> lock(check);
             if(customer_id.size() == 0)
+            {
                 is_sleeping = true;
+                std::cout << "No one to cut. Barber is now sleeping... zzz" << std::endl;
+            }
         }
     }   
 }
@@ -122,24 +137,24 @@ int main(int argc, char* argv[])
     desc_commandline.add_options()
         ( "n-value",
           boost::program_options::value<int>()->default_value(10),
-          "number of customers that arrive")
+          "Number of customers that arrive")
         ;
 
     desc_commandline.add_options()
         ( "wait-time",
           boost::program_options::value<int>()->default_value(50),
-          "maximum waiting time before two customers")
+          "Maximum waiting time before two customers")
         ;
 
     desc_commandline.add_options()
         ( "cut-time",
-          boost::program_options::value<int>()->default_value(500),
+          boost::program_options::value<int>()->default_value(50),
           "Time taken to cut hair by the barber")
         ;
     
     desc_commandline.add_options()
         ( "queue-length",
-          boost::program_options::value<int>()->default_value(5),
+          boost::program_options::value<int>()->default_value(3),
           "Maximum waiting customer allowed")
         ;
 
