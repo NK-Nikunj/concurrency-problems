@@ -9,8 +9,8 @@ make
 ```
 
 If the program built succesfully, You should see a binary named 
-`dp`. To run:
+`sleeping_barber`. To run:
 
 ```
-./dining_philosopher
+./sleeping_barber
 ```
