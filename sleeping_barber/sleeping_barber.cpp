@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     desc_commandline.add_options()
         ( "wait-time",
           boost::program_options::value<int>()->default_value(50),
-          "Maximum waiting time before two customers")
+          "Maximum waiting time between two customers")
         ;
 
     desc_commandline.add_options()
