@@ -49,8 +49,6 @@ bool check_left(int i)
 bool check_right(int i)
 {
     std::lock_guard<hpx::lcos::local::mutex> mu_right(mu[i]);
-    // auto mu_right(mu[i]);
-    // std::cout << i << std::endl;
     bool val = chopsticks[i];
     if(val == true)
         chopsticks[i] == false;
@@ -77,9 +75,6 @@ void dt(int i)
 
         if(wishes_to_eat)
         {
-            // char const* fmt1 = "Philosopher {1} wishes to eat, it will now try";
-            // hpx::util::format_to(std::cout, fmt1, index);
-            
             print_wish(i);
 
             bool is_left_clear, is_right_clear;
@@ -91,9 +86,6 @@ void dt(int i)
                     eat();
 
             } while(is_left_clear == false || is_right_clear == false);
-
-            // char const* fmt2 = "Philosopher {1} has eaten well, it will now think";
-            // hpx::util::format_to(std::cout, fmt2, index);
 
             print_eat(i);
 

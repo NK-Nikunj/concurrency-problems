@@ -2,16 +2,12 @@
 //  Copyright (c) 2019 Nikunj Gupta
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <hpx/hpx_init.hpp>
-#include <hpx/include/actions.hpp>
-#include <hpx/include/async.hpp>
-#include <hpx/include/util.hpp>
-
 #include <cstdint>
 #include <iostream>
 #include <queue>
 #include <atomic>
 
+#include <thread>
 
 class Item
 {
@@ -31,9 +27,9 @@ private:
 };
 
 // To define a semaphore
-std::atomic<int> full = 0;
-std::atomic<int> empty = 0;
-std::atomic<int> mutex = 1;
+std::atomic<int> full {0};
+std::atomic<int> empty {0};
+std::atomic<int> mutex {1};
 
 std::queue<Item> buffer;
 
@@ -44,9 +40,9 @@ namespace semaphore
 {
     class mutex 
     { 
-        std::atomic<bool> lock_stream = false; 
-    public: 
-        mutex(){} 
+        std::atomic<bool> lock_stream; 
+    public:
+        mutex() :lock_stream(false){} 
         void lock() 
         { 
             do{
@@ -101,7 +97,7 @@ std::string get_item()
     return s[std::rand() % 10];
 }
 
-void writer()
+void producer(int i)
 {
     while(!should_end)
     {
@@ -110,7 +106,9 @@ void writer()
         semaphore::wait(empty);
         semaphore::wait(mutex);
 
-        std::cout << "Writer wrote item with string: "
+        std::cout << empty << " " << mutex << " " << full << std::endl;
+
+        std::cout << "Producer " << i << " produced item with string: "
                   << item.get_content() << std::endl;
 
         buffer.push(item);
@@ -120,15 +118,17 @@ void writer()
     }
 }
 
-void reader()
+void consumer(int i)
 {
     while(!should_end)
     {
         semaphore::wait(full);
         semaphore::wait(mutex);
 
+        std::cout << empty << " " << mutex << " " << full << std::endl;
+
         Item item = buffer.front();
-        std::cout << "Reader read item with string: "
+        std::cout << "Consumer " << i << " consumed item with string: "
                   << item.get_content() << std::endl;
 
         semaphore::signal(mutex);
@@ -144,25 +144,25 @@ void stop()
 
 void simulate(int p, int c)
 {
-    std::vector<std::unique_ptr<hpx::thread>> thread_spawn;
+    std::vector<std::unique_ptr<std::thread>> thread_spawn;
     for(auto i = 0; i < p; ++i)
     {
-        std::unique_ptr<hpx::thread> pt = 
-                    std::make_unique<hpx::thread>(&writer);
+        std::unique_ptr<std::thread> pt = 
+                    std::make_unique<std::thread>(&producer, i);
         
         thread_spawn.emplace_back(std::move(pt));
     }
 
     for(auto i = 0; i < c; ++i)
     {
-        std::unique_ptr<hpx::thread> pt = 
-                    std::make_unique<hpx::thread>(&reader);
+        std::unique_ptr<std::thread> pt = 
+                    std::make_unique<std::thread>(&consumer, i);
         
         thread_spawn.emplace_back(std::move(pt));
     }
 
-    std::unique_ptr<hpx::thread> pt = 
-                std::make_unique<hpx::thread>(&stop);
+    std::unique_ptr<std::thread> pt = 
+                std::make_unique<std::thread>(&stop);
     
     thread_spawn.emplace_back(std::move(pt));
 
@@ -170,48 +170,18 @@ void simulate(int p, int c)
         thread_spawn[i] -> join();
 }
 
-int hpx_main(boost::program_options::variables_map& vm)
+int main()
 {
     std::srand(std::time(0));
 
-    int n = vm["n-value"].as<int>();
-    int p = vm["write-value"].as<int>();
-    int c = vm["read-value"].as<int>();
+    int n = 10;
+    int p = 5;
+    int c = 5;
     empty = n;
 
     {
         simulate(p, c);
     }
 
-    return hpx::finalize(); // Handles HPX shutdown
-}
-
-int main(int argc, char* argv[])
-{
-    // Configure application-specific options
-    boost::program_options::options_description
-       desc_commandline("Usage: " HPX_APPLICATION_STRING " [options]");
-
-    desc_commandline.add_options()
-        ( "n-value",
-          boost::program_options::value<int>()->default_value(10),
-          "n value for the Buffer length")
-        ;
-
-    desc_commandline.add_options()
-    ( "write-value",
-        boost::program_options::value<int>()->default_value(5),
-        "Number of writers")
-    ;
-
-    desc_commandline.add_options()
-        ( "read-value",
-          boost::program_options::value<int>()->default_value(5),
-          "Number of readers")
-        ;
-
-
-
-    // Initialize and run HPX
-    return hpx::init(desc_commandline, argc, argv);
+    return 0;
 }

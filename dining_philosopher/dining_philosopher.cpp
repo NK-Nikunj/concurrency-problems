@@ -18,6 +18,8 @@ class Dining_philosopher
 public:
     Dining_philosopher(int n) :num_phil(n)
     {
+        std::srand(std::time(0));
+        
         for(auto i = 0; i < n; ++i)
         {
             chopsticks.push_back(true);
@@ -31,8 +33,6 @@ public:
 private:
     bool generate_random_number()
     {
-        std::srand(std::time(0));
-
         return (std::rand() % 2) ? false : true;
     }
 

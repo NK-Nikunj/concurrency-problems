@@ -6,3 +6,6 @@ find_package(HPX REQUIRED)
 add_hpx_executable(readers_writers
     SOURCES readers_writers.cpp
     COMPONENT_DEPENDENCIES iostreams)
+
+add_executable(readers_writers_standard_cpp
+               rw.cpp)

@@ -102,7 +102,7 @@ void Barber::simulate(int n, int wt)
         
         thread_spawn.emplace_back(std::move(pt));
         
-        std::srand(std::time(0));
+        
         hpx::this_thread::sleep_for(
             std::chrono::milliseconds((std::rand()%wt) + 1));
     }
@@ -113,6 +113,8 @@ void Barber::simulate(int n, int wt)
 
 int hpx_main(boost::program_options::variables_map& vm)
 {
+    std::srand(std::time(0));
+    
     int n = vm["n-value"].as<int>();
     int wt = vm["wait-time"].as<int>();
     int ct = vm["cut-time"].as<int>();

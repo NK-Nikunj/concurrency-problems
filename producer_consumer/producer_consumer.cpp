@@ -98,8 +98,6 @@ std::string get_item()
                                 "Random string 9",
                                 "Random string 10"};
 
-    std::srand(std::time(0));
-
     return s[std::rand() % 10];
 }
 
@@ -178,6 +176,8 @@ void simulate(int p, int c)
 
 int hpx_main(boost::program_options::variables_map& vm)
 {
+    std::srand(std::time(0));
+
     int n = vm["n-value"].as<int>();
     int p = vm["prod-value"].as<int>();
     int c = vm["cons-value"].as<int>();

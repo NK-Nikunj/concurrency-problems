@@ -6,3 +6,6 @@ find_package(HPX REQUIRED)
 add_hpx_executable(producer_consumer
     SOURCES producer_consumer.cpp
     COMPONENT_DEPENDENCIES iostreams)
+
+add_executable(producer_consumer_standard_cpp
+               pc.cpp)

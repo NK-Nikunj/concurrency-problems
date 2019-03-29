@@ -26,3 +26,16 @@ If you want to simulate with a different number of philosophers run:
 Replace `your_value` with the desired value. `n-value` is the buffer length, 
 `write-value` is the number of writer threads and `read-value` is the 
 number of reader threads.
+
+### Note
+
+HPX is a task based execution system which expects work to yield via a HPX 
+synchronization primitive or complete. Thus the HPX solution CAN sometimes 
+result in a deadlock due to internal thread scheduling policies.
+
+If you experience something similar try running the standard C++14 concurrency 
+port of the HPX code. Run:
+
+```
+readers_writers_standard_cpp
+```
