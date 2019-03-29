@@ -45,7 +45,7 @@ namespace semaphore
     class mutex 
     { 
         std::atomic<bool> lock_stream = false; 
-    public:
+    public: 
         mutex(){} 
         void lock() 
         { 
@@ -103,7 +103,7 @@ std::string get_item()
     return s[std::rand() % 10];
 }
 
-void producer(int i)
+void writer()
 {
     while(!should_end)
     {
@@ -112,9 +112,7 @@ void producer(int i)
         semaphore::wait(empty);
         semaphore::wait(mutex);
 
-        std::cout << empty << " " << mutex << " " << full << std::endl;
-
-        std::cout << "Producer " << i << " produced item with string: "
+        std::cout << "Writer wrote item with string: "
                   << item.get_content() << std::endl;
 
         buffer.push(item);
@@ -124,17 +122,15 @@ void producer(int i)
     }
 }
 
-void consumer(int i)
+void reader()
 {
     while(!should_end)
     {
         semaphore::wait(full);
         semaphore::wait(mutex);
 
-        std::cout << empty << " " << mutex << " " << full << std::endl;
-
         Item item = buffer.front();
-        std::cout << "Consumer " << i << " consumed item with string: "
+        std::cout << "Reader read item with string: "
                   << item.get_content() << std::endl;
 
         semaphore::signal(mutex);
@@ -154,7 +150,7 @@ void simulate(int p, int c)
     for(auto i = 0; i < p; ++i)
     {
         std::unique_ptr<hpx::thread> pt = 
-                    std::make_unique<hpx::thread>(&producer, i);
+                    std::make_unique<hpx::thread>(&writer);
         
         thread_spawn.emplace_back(std::move(pt));
     }
@@ -162,7 +158,7 @@ void simulate(int p, int c)
     for(auto i = 0; i < c; ++i)
     {
         std::unique_ptr<hpx::thread> pt = 
-                    std::make_unique<hpx::thread>(&consumer, i);
+                    std::make_unique<hpx::thread>(&reader);
         
         thread_spawn.emplace_back(std::move(pt));
     }
@@ -179,8 +175,8 @@ void simulate(int p, int c)
 int hpx_main(boost::program_options::variables_map& vm)
 {
     int n = vm["n-value"].as<int>();
-    int p = vm["prod-value"].as<int>();
-    int c = vm["cons-value"].as<int>();
+    int p = vm["write-value"].as<int>();
+    int c = vm["read-value"].as<int>();
     empty = n;
 
     {
@@ -203,15 +199,15 @@ int main(int argc, char* argv[])
         ;
 
     desc_commandline.add_options()
-    ( "prod-value",
+    ( "write-value",
         boost::program_options::value<int>()->default_value(5),
-        "Number of producers")
+        "Number of writers")
     ;
 
     desc_commandline.add_options()
-        ( "cons-value",
+        ( "read-value",
           boost::program_options::value<int>()->default_value(5),
-          "Number of consumers")
+          "Number of readers")
         ;
 
 

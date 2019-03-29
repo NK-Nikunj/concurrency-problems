@@ -9,20 +9,20 @@ make
 ```
 
 If the program built succesfully, You should see a binary named 
-`producer_consumer`. To run:
+`readers_writers`. To run:
 
 ```
-./producer_consumer
+./readers_writers
 ```
 
-This would run a simulation of producer consumer problem with buffer 
+This would run a simulation of readers writers problem with buffer 
 length of 10 and 5 consumer and producer threads. 
 If you want to simulate with a different number of philosophers run:
 ```
-./producer_consumer --n-value your_value --prod-value your_value 
---cons-value your_value
+./readers_writers --n-value your_value --write-value your_value 
+--read-value your_value
 ```
 
 Replace `your_value` with the desired value. `n-value` is the buffer length, 
-`prod-value` is the number of producer threads and `cons-value` is the 
-number of consumer threads.
+`write-value` is the number of writer threads and `read-value` is the 
+number of reader threads.
